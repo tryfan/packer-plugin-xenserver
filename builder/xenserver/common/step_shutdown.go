@@ -7,12 +7,14 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
+	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	xenapi "github.com/terra-farm/go-xen-api-client"
 )
 
 type StepShutdown struct{}
 
 func (StepShutdown) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
+	comm := state.Get("communicator").(packersdk.Communicator)
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*Connection)
@@ -31,8 +33,9 @@ func (StepShutdown) Run(ctx context.Context, state multistep.StateBag) multistep
 		if config.ShutdownCommand != "" {
 			ui.Message("Executing shutdown command...")
 
-			_, err := ExecuteGuestSSHCmd(state, config.ShutdownCommand)
-			if err != nil {
+			// _, err := ExecuteGuestSSHCmd(state, config.ShutdownCommand)
+			cmd := &packersdk.RemoteCmd{Command: config.ShutdownCommand}
+			if err := cmd.RunWithUi(ctx, comm, ui); err != nil {
 				ui.Error(fmt.Sprintf("Shutdown command failed: %s", err.Error()))
 				return false
 			}
