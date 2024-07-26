@@ -319,7 +319,8 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		steps = append(download_steps, steps...)
 	}
 
-	self.runner = &multistep.BasicRunner{Steps: steps}
+	// self.runner = &multistep.BasicRunner{Steps: steps}
+	self.runner = commonsteps.NewRunner(steps, self.config.PackerConfig, ui)
 	self.runner.Run(ctx, state)
 
 	if rawErr, ok := state.GetOk("error"); ok {
